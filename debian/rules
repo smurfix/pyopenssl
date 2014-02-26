@@ -17,7 +17,7 @@ override_dh_auto_build:
 	    python$$py-dbg setup.py build; \
 	done
 
-	$(MAKE) -C doc all
+	$(MAKE) -C doc html text latexpdf
 
 override_dh_auto_test:
 ifeq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)

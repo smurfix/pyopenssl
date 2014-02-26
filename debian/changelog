@@ -1,3 +1,9 @@
+pyopenssl (0.14-3) smurf; urgency=low
+
+  * Build+install Sphinx docs
+
+ -- Matthias Urlichs <matthias@urlichs.de>  Wed, 26 Feb 2014 12:17:36 +0100
+
 pyopenssl (0.14-2) smurf; urgency=low
 
   * Dno't use "apply" in Py3, it does not exist

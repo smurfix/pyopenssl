@@ -1,0 +1,75 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode. 
+#export DH_VERBOSE=1
+
+PY2VERS := $(shell pyversions -r -v)
+PY3VERS := $(shell py3versions -r -v)
+PYVERS := $(PY2VERS) $(PY3VERS)
+
+%:
+	dh $@ --with python2,python3
+
+override_dh_auto_build:
+	set -e; \
+	for py in $(PYVERS); do  \
+	    python$$py setup.py build; \
+	    python$$py-dbg setup.py build; \
+	done
+
+	$(MAKE) -C doc all
+
+override_dh_auto_test:
+ifeq ($(filter nocheck,$(DEB_BUILD_OPTIONS)),)
+	# run tests
+	-for py in $(PYVERS); do  \
+	    for test in OpenSSL/test/test*; do \
+	        echo "running $$test for python$$py ..."; \
+	        PYTHONPATH=build/lib.$(DEB_BUILD_ARCH_OS)-$(shell uname -m)-$$py python$$py $$test; \
+	        PYTHONPATH=`ls -d build/lib_d.*-$$py || ls -d build/lib.*-$$py-pydebug` python$$py-dbg $$test; \
+	    done; \
+	done
+endif
+     
+
+override_dh_auto_clean:
+	-for py in $(PYVERS); do \
+	    python$$py setup.py clean --all; \
+	    python$$py-dbg setup.py clean --all; \
+	done
+
+	rm -rf build
+
+	$(MAKE) -C doc clean
+
+	rm -rf *.key *.pem tmp*
+
+	dh_clean build-stamp version.pyc
+
+override_dh_auto_install: DH_OPTIONS=
+override_dh_auto_install:
+	set -e; \
+	for py in $(PY2VERS); do \
+	    echo "installing for python$$py ..."; \
+ 	    python$$py setup.py install --root=$(CURDIR)/debian/python-openssl --install-layout=deb; \
+	    echo "installing for python$$py-dbg ..."; \
+	    python$$py-dbg setup.py install --root=$(CURDIR)/debian/python-openssl-dbg --install-layout=deb; \
+ 	done
+	set -e; \
+	for py in $(PY3VERS); do \
+	    echo "installing for python$$py ..."; \
+ 	    python$$py setup.py install --root=$(CURDIR)/debian/python3-openssl --install-layout=deb; \
+	    echo "installing for python$$py-dbg ..."; \
+	    python$$py-dbg setup.py install --root=$(CURDIR)/debian/python3-openssl-dbg --install-layout=deb; \
+ 	done
+	find debian/python-openssl-dbg ! -type d ! -name '*_d.so' | xargs rm -f
+	find debian/python-openssl-dbg -depth -empty -exec rmdir {} \;
+
+override_dh_installchangelogs:
+	dh_installchangelogs ChangeLog
+
+override_dh_strip:
+	dh_strip -ppython-openssl --dbg-package=python-openssl-dbg
+	dh_strip -ppython3-openssl --dbg-package=python3-openssl-dbg
+	rm -rf debian/python-openssl-dbg/usr/share/doc/python-openssl-dbg
+	ln -s python-openssl debian/python-openssl-dbg/usr/share/doc/python-openssl-dbg

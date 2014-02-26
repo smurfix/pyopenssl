@@ -1,3 +1,9 @@
+pyopenssl (0.14-1) smurf; urgency=low
+
+  * Upstream import
+
+ -- Matthias Urlichs <matthias@urlichs.de>  Wed, 26 Feb 2014 10:53:31 +0100
+
 pyopenssl (0.13.1-2) unstable; urgency=medium
 
   * debian/control
